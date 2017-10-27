@@ -8,7 +8,7 @@ rules:
 - apiGroups: [""]
   resources:
   - nodes
-  verbs: ["*"]
+  verbs: ["patch", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -19,10 +19,10 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: who-is-kubeadm
+  name: who-is-kubeadm-operator
 subjects:
 - kind: ServiceAccount
-  name: who-is-kubeadm
+  name: who-is-kubeadm-operator
   namespace: kube-system
 ---
 apiVersion: v1
@@ -46,20 +46,11 @@ spec:
       labels:
         name: who-is-kubeadm
     spec:
-      tolerations:
-      - key: node.cloudprovider.kubernetes.io/uninitialized
-        operator: Exists
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
       serviceAccountName: who-is-kubeadm
       containers:
-      - image: busybox
+      - image: appscode/who-is-kubeadm:demo
         command:
-        - /bin/sh
-        - -c
-        - 'while true; do kubectl annotate --overwrite --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) nodes $NODE_NAME cloud.appscode.com/kubeadm-version=$(kubeadm version -o short); sleep 1; done'
+        - annotate-kubeadm-version.sh
         imagePullPolicy: IfNotPresent
         name: busybox
         env:
@@ -70,14 +61,7 @@ spec:
         volumeMounts:
         - mountPath: /usr/bin/kubeadm
           name: kubeadm
-          readOnly: true
-        - mountPath: /usr/bin/kubectl
-          name: kubectl
-          readOnly: true
       volumes:
       - name: kubeadm
         hostPath:
           path: /usr/bin/kubeadm
-      - name: kubectl
-        hostPath:
-          path: /usr/bin/kubectl
