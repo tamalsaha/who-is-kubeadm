@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: who-is-kubeadm
+  namespace: kube-system
+  labels:
+    app: who-is-kubeadm
+spec:
+  template:
+    metadata:
+      labels:
+        name: who-is-kubeadm
+    spec:
+      containers:
+      - image: appscode/kubectl:demo
+        command:
+        - annotate-kubeadm-version.sh
+        imagePullPolicy: Always
+        name: busybox
