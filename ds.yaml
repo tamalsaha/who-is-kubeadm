@@ -1,15 +1,50 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: who-is-kubeadm
+  labels:
+    app: who-is-kubeadm
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: who-is-kubeadm
+  labels:
+    app: who-is-kubeadm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: who-is-kubeadm-operator
+subjects:
+- kind: ServiceAccount
+  name: who-is-kubeadm-operator
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: who-is-kubeadm
+  namespace: kube-system
+  labels:
+    app: who-is-kubeadm
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: busy-dm
-  namespace: default
+  name: who-is-kubeadm
+  namespace: kube-system
   labels:
-    app: busy-dm
+    app: who-is-kubeadm
 spec:
   template:
     metadata:
       labels:
-        name: busy-dm
+        name: who-is-kubeadm
     spec:
       containers:
       - image: appscode/who-is-kubeadm:demo
@@ -22,3 +57,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        volumeMounts:
+        - mountPath: /usr/bin/kubeadm
+          name: kubeadm
+      volumes:
+      - name: kubeadm
+        hostPath:
+          path: /usr/bin/kubeadm
