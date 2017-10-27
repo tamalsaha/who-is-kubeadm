@@ -1,19 +1,24 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: who-is-kubeadm
-  namespace: kube-system
+  name: busy-dm
+  namespace: default
   labels:
-    app: who-is-kubeadm
+    app: busy-dm
 spec:
   template:
     metadata:
       labels:
-        name: who-is-kubeadm
+        name: busy-dm
     spec:
       containers:
-      - image: appscode/kubectl:demo
+      - image: appscode/who-is-kubeadm:demo
         command:
         - annotate-kubeadm-version.sh
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: busybox
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
